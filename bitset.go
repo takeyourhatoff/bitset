@@ -177,7 +177,7 @@ func (s *Bitset) Bytes() []byte {
 }
 
 // FromBytes sets s to the value of data interpreted as a bitarray in the same format as produced by Bytes..
-func (s *Bitset) FromBytes(data []byte) *Bitset {
+func (s *Bitset) FromBytes(data []byte) {
 	const r = bits.UintSize / 8
 	if len(data) == 0 {
 		s.s = nil
@@ -198,7 +198,6 @@ func (s *Bitset) FromBytes(data []byte) *Bitset {
 		s.s[i] = bits.Reverse(s.s[i])
 		data = data[r:]
 	}
-	return s
 }
 
 func idx(i int) (w int, mask uint) {
