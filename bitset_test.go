@@ -316,6 +316,21 @@ func TestBitwise(t *testing.T) {
 	}
 }
 
+func BenchmarkNextAfter(b *testing.B) {
+	buf := make([]byte, 10000)
+	rand.Read(buf)
+	s := new(Bitset)
+	s.FromBytes(buf)
+	var x int
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		x = s.NextAfter(x)
+		if x == -1 {
+			x = 0
+		}
+	}
+}
+
 func bitwiseF(f func(p, q bool) bool, l0, l1 []int) []int {
 	var x []int
 	lim := max(l0, l1)
