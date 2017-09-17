@@ -159,10 +159,9 @@ func TestMax(t *testing.T) {
 		if len(l0) == 0 {
 			if max == -1 {
 				return true
-			} else {
-				t.Logf("b.Max() = %v, expected -1", max)
-				return false
 			}
+			t.Logf("b.Max() = %v, expected -1", max)
+			return false
 		}
 		if lMax := l0[len(l0)-1]; max != lMax {
 			t.Logf("b.Max() = %v, expected %v", max, lMax)
