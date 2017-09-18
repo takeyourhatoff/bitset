@@ -27,6 +27,32 @@ func (s *Bitset) Add(i int) {
 	s.s[w] |= mask
 }
 
+// AddRange adds integers in the interval [low, hi) to the set. AddRange panics if low is less than zero.
+func (s *Bitset) AddRange(low, hi int) {
+	if low < 0 {
+		panic("bitset: cannot add non-negative integer to set")
+	}
+	w0, _ := idx(low)
+	w1, _ := idx(hi - 1)
+	for j := len(s.s); j <= w1; j++ {
+		s.s = append(s.s, 0)
+	}
+	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
+	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
+	switch {
+	case w1-w0 < 0:
+		return
+	case w1 == w0:
+		s.s[w0] |= leftMask & rightMask
+	default:
+		s.s[w0] |= leftMask
+		for i := w0 + 1; i < w1; i++ {
+			s.s[i] = maxUint
+		}
+		s.s[w1] |= rightMask
+	}
+}
+
 // Remove removes the integer i from s, or does nothing if i is not already in s.
 func (s *Bitset) Remove(i int) {
 	if i < 0 {
@@ -36,6 +62,36 @@ func (s *Bitset) Remove(i int) {
 	w, mask := idx(i)
 	if w < len(s.s) {
 		s.s[w] &^= mask
+	}
+}
+
+// RemoveRange removes integers in the interval [low, hi) from the set.
+func (s *Bitset) RemoveRange(low, hi int) {
+	if low < 0 {
+		low = 0
+	}
+	w0, _ := idx(low)
+	if w0 >= len(s.s) {
+		return
+	}
+	w1, _ := idx(hi - 1)
+	if w1 >= len(s.s) {
+		hi = len(s.s) * bits.UintSize
+		w1 = len(s.s) - 1
+	}
+	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
+	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
+	switch {
+	case w1-w0 < 0:
+		return
+	case w1 == w0:
+		s.s[w0] &^= leftMask & rightMask
+	default:
+		s.s[w0] &^= leftMask
+		for i := w0 + 1; i < w1; i++ {
+			s.s[i] = 0
+		}
+		s.s[w1] &^= rightMask
 	}
 }
 

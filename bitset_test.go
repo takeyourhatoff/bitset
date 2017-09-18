@@ -59,6 +59,18 @@ func TestAdd_Panic(t *testing.T) {
 	new(Bitset).Add(-1)
 }
 
+func TestAddRange_Panic(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Error("b.Add(-1) did not panic")
+		} else if err, ok := r.(runtime.Error); ok {
+			t.Error(err)
+		}
+	}()
+	new(Bitset).AddRange(-1, 0)
+}
+
 func TestAddAndTest(t *testing.T) {
 	f := func(l ascendingInts) bool {
 		b := new(Bitset)
@@ -246,6 +258,48 @@ func TestString(t *testing.T) {
 		return true
 	}
 	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAddRange(t *testing.T) {
+	f0 := func(buf []byte, low, len uint8) string {
+		var s Bitset
+		s.FromBytes(buf)
+		hi := int(low) + int(len)
+		for i := int(low); i < hi; i++ {
+			s.Add(i)
+		}
+		return s.String()
+	}
+	f1 := func(buf []byte, low, len uint8) string {
+		var s Bitset
+		s.FromBytes(buf)
+		s.AddRange(int(low), int(low)+int(len))
+		return s.String()
+	}
+	if err := quick.CheckEqual(f0, f1, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRemoveRange(t *testing.T) {
+	f0 := func(buf []byte, low, len uint8) string {
+		var s Bitset
+		s.FromBytes(buf)
+		hi := int(low) + int(len)
+		for i := int(low); i < hi; i++ {
+			s.Remove(i)
+		}
+		return fmt.Sprintf("%b", s)
+	}
+	f1 := func(buf []byte, low, len uint8) string {
+		var s Bitset
+		s.FromBytes(buf)
+		s.RemoveRange(int(low), int(low)+int(len))
+		return fmt.Sprintf("%b", s)
+	}
+	if err := quick.CheckEqual(f0, f1, nil); err != nil {
 		t.Error(err)
 	}
 }
