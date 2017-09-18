@@ -304,6 +304,32 @@ func TestRemoveRange(t *testing.T) {
 	}
 }
 
+func TestEqual(t *testing.T) {
+	f0 := func(b0, b1 []byte) bool {
+		if len(b0) > 0 && b0[0] >= 127 {
+			// give a fair chance of b0 == b1
+			b1 = b0
+		}
+		var s0, s1 Set
+		s0.FromBytes(b0)
+		s1.FromBytes(b1)
+		return bytes.Equal(s0.Bytes(), s1.Bytes())
+	}
+	f1 := func(b0, b1 []byte) bool {
+		if len(b0) > 0 && b0[0] >= 127 {
+			// give a fair chance of b0 == b1
+			b1 = b0
+		}
+		var s0, s1 Set
+		s0.FromBytes(b0)
+		s1.FromBytes(b1)
+		return s0.Equal(&s1)
+	}
+	if err := quick.CheckEqual(f0, f1, nil); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestBitwise(t *testing.T) {
 	for _, v := range []struct {
 		op string

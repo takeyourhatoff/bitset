@@ -163,6 +163,25 @@ func (s *Set) Cardinality() int {
 	return n
 }
 
+func (s *Set) Equal(ss *Set) bool {
+	s0, s1 := s.s, ss.s
+	for len(s0) > 0 && s0[len(s0)-1] == 0 {
+		s0 = s0[:len(s0)-1]
+	}
+	for len(s1) > 0 && s1[len(s1)-1] == 0 {
+		s1 = s1[:len(s1)-1]
+	}
+	if len(s0) != len(s1) {
+		return false
+	}
+	for i := range s0 {
+		if s0[i] != s1[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // NextAfter returns the smallest integer in s greater than or equal to i or -1 if no such integer exists.
 func (s *Set) NextAfter(i int) int {
 	if i < 0 {
