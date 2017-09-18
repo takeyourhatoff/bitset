@@ -32,7 +32,7 @@ func (s *Set) AddRange(low, hi int) {
 	if low < 0 {
 		panic("bitset: cannot add non-negative integer to set")
 	}
-	if low == hi {
+	if hi-low <= 0 {
 		return
 	}
 	w0, _ := idx(low)
@@ -42,18 +42,15 @@ func (s *Set) AddRange(low, hi int) {
 	}
 	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
 	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
-	switch {
-	case w1-w0 < 0:
-		return
-	case w1 == w0:
+	if w1 == w0 {
 		s.s[w0] |= leftMask & rightMask
-	default:
-		s.s[w0] |= leftMask
-		for i := w0 + 1; i < w1; i++ {
-			s.s[i] = maxUint
-		}
-		s.s[w1] |= rightMask
+		return
 	}
+	s.s[w0] |= leftMask
+	for i := w0 + 1; i < w1; i++ {
+		s.s[i] = maxUint
+	}
+	s.s[w1] |= rightMask
 }
 
 // Remove removes the integer i from s, or does nothing if i is not already in s.
@@ -73,7 +70,7 @@ func (s *Set) RemoveRange(low, hi int) {
 	if low < 0 {
 		low = 0
 	}
-	if low == hi {
+	if hi-low <= 0 {
 		return
 	}
 	w0, _ := idx(low)
@@ -87,18 +84,15 @@ func (s *Set) RemoveRange(low, hi int) {
 	}
 	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
 	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
-	switch {
-	case w1-w0 < 0:
-		return
-	case w1 == w0:
+	if w1 == w0 {
 		s.s[w0] &^= leftMask & rightMask
-	default:
-		s.s[w0] &^= leftMask
-		for i := w0 + 1; i < w1; i++ {
-			s.s[i] = 0
-		}
-		s.s[w1] &^= rightMask
+		return
 	}
+	s.s[w0] &^= leftMask
+	for i := w0 + 1; i < w1; i++ {
+		s.s[i] = 0
+	}
+	s.s[w1] &^= rightMask
 }
 
 // Test returns true if i is in s, false otherwise.

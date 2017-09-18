@@ -263,19 +263,18 @@ func TestString(t *testing.T) {
 }
 
 func TestAddRange(t *testing.T) {
-	f0 := func(buf []byte, low, len uint8) string {
+	f0 := func(buf []byte, low, hi uint8) string {
 		var s Set
 		s.FromBytes(buf)
-		hi := int(low) + int(len)
-		for i := int(low); i < hi; i++ {
+		for i := int(low); i < int(hi); i++ {
 			s.Add(i)
 		}
 		return s.String()
 	}
-	f1 := func(buf []byte, low, len uint8) string {
+	f1 := func(buf []byte, low, hi uint8) string {
 		var s Set
 		s.FromBytes(buf)
-		s.AddRange(int(low), int(low)+int(len))
+		s.AddRange(int(low), int(hi))
 		return s.String()
 	}
 	if err := quick.CheckEqual(f0, f1, nil); err != nil {
@@ -301,20 +300,19 @@ func TestRemoveRange00(t *testing.T) {
 }
 
 func TestRemoveRange(t *testing.T) {
-	f0 := func(buf []byte, low, len uint8) string {
+	f0 := func(buf []byte, low, hi uint8) string {
 		var s Set
 		s.FromBytes(buf)
-		hi := int(low) + int(len)
-		for i := int(low); i < hi; i++ {
+		for i := int(low); i < int(hi); i++ {
 			s.Remove(i)
 		}
-		return fmt.Sprintf("%b", s)
+		return s.String()
 	}
-	f1 := func(buf []byte, low, len uint8) string {
+	f1 := func(buf []byte, low, hi uint8) string {
 		var s Set
 		s.FromBytes(buf)
-		s.RemoveRange(int(low), int(low)+int(len))
-		return fmt.Sprintf("%b", s)
+		s.RemoveRange(int(low), int(hi))
+		return s.String()
 	}
 	if err := quick.CheckEqual(f0, f1, nil); err != nil {
 		t.Error(err)
