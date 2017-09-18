@@ -337,7 +337,9 @@ func TestEqual(t *testing.T) {
 		}
 		var s0, s1 Set
 		s0.FromBytes(b0)
+		s0.s = append(s0.s, make([]uint, len(s0.s))...)
 		s1.FromBytes(b1)
+		s1.s = append(s1.s, make([]uint, len(s1.s))...)
 		return s0.Equal(&s1)
 	}
 	if err := quick.CheckEqual(f0, f1, nil); err != nil {
