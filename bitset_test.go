@@ -13,8 +13,8 @@ import (
 )
 
 // NextAfter can be used to iterate over the elements of the set.
-func ExampleBitset_NextAfter() {
-	s := new(Bitset)
+func ExampleSet_NextAfter() {
+	s := new(Set)
 	s.Add(2)
 	s.Add(42)
 	s.Add(13)
@@ -27,8 +27,8 @@ func ExampleBitset_NextAfter() {
 	// 42
 }
 
-func ExampleBitset_String() {
-	s := new(Bitset)
+func ExampleSet_String() {
+	s := new(Set)
 	s.Add(2)
 	s.Add(42)
 	s.Add(13)
@@ -36,8 +36,8 @@ func ExampleBitset_String() {
 	// Output: [2 13 42]
 }
 
-func ExampleBitset_Bytes() {
-	s := new(Bitset)
+func ExampleSet_Bytes() {
+	s := new(Set)
 	s.Add(0)
 	s.Add(3)
 	s.Add(8)
@@ -56,7 +56,7 @@ func TestAdd_Panic(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-	new(Bitset).Add(-1)
+	new(Set).Add(-1)
 }
 
 func TestAddRange_Panic(t *testing.T) {
@@ -68,12 +68,12 @@ func TestAddRange_Panic(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-	new(Bitset).AddRange(-1, 0)
+	new(Set).AddRange(-1, 0)
 }
 
 func TestAddAndTest(t *testing.T) {
 	f := func(l ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -97,7 +97,7 @@ func TestAddAndTest(t *testing.T) {
 
 func TestRemove(t *testing.T) {
 	f := func(l0, l1 ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l0 {
 			b.Add(i)
 		}
@@ -129,7 +129,7 @@ func TestRemove(t *testing.T) {
 
 func TestCopy(t *testing.T) {
 	f0 := func(l ascendingInts) string {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -141,7 +141,7 @@ func TestCopy(t *testing.T) {
 		return b.String()
 	}
 	f1 := func(l ascendingInts) string {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -158,7 +158,7 @@ func TestCopy(t *testing.T) {
 
 func TestMax(t *testing.T) {
 	f := func(l ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -188,11 +188,11 @@ func TestMax(t *testing.T) {
 
 func TestCount(t *testing.T) {
 	f := func(l ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
-		if count := b.Count(); count != len(l) {
+		if count := b.Cardinality(); count != len(l) {
 			t.Logf("b.Count() = %d, expected %d", count, len(l))
 			return false
 		}
@@ -205,7 +205,7 @@ func TestCount(t *testing.T) {
 
 func TestNextAfter(t *testing.T) {
 	f := func(l ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -232,7 +232,7 @@ func TestBytes(t *testing.T) {
 		for len(data0) > 0 && data0[len(data0)-1] == 0 {
 			data0 = data0[:len(data0)-1]
 		}
-		b := new(Bitset)
+		b := new(Set)
 		b.FromBytes(data0)
 		if data1 := b.Bytes(); bytes.Equal(data0, data1) == false {
 			t.Logf("b.Bytes() = %v, expected %v", data1, data0)
@@ -247,7 +247,7 @@ func TestBytes(t *testing.T) {
 
 func TestString(t *testing.T) {
 	f := func(l ascendingInts) bool {
-		b := new(Bitset)
+		b := new(Set)
 		for _, i := range l {
 			b.Add(i)
 		}
@@ -264,7 +264,7 @@ func TestString(t *testing.T) {
 
 func TestAddRange(t *testing.T) {
 	f0 := func(buf []byte, low, len uint8) string {
-		var s Bitset
+		var s Set
 		s.FromBytes(buf)
 		hi := int(low) + int(len)
 		for i := int(low); i < hi; i++ {
@@ -273,7 +273,7 @@ func TestAddRange(t *testing.T) {
 		return s.String()
 	}
 	f1 := func(buf []byte, low, len uint8) string {
-		var s Bitset
+		var s Set
 		s.FromBytes(buf)
 		s.AddRange(int(low), int(low)+int(len))
 		return s.String()
@@ -285,7 +285,7 @@ func TestAddRange(t *testing.T) {
 
 func TestRemoveRange(t *testing.T) {
 	f0 := func(buf []byte, low, len uint8) string {
-		var s Bitset
+		var s Set
 		s.FromBytes(buf)
 		hi := int(low) + int(len)
 		for i := int(low); i < hi; i++ {
@@ -294,7 +294,7 @@ func TestRemoveRange(t *testing.T) {
 		return fmt.Sprintf("%b", s)
 	}
 	f1 := func(buf []byte, low, len uint8) string {
-		var s Bitset
+		var s Set
 		s.FromBytes(buf)
 		s.RemoveRange(int(low), int(low)+int(len))
 		return fmt.Sprintf("%b", s)
@@ -308,51 +308,51 @@ func TestBitwise(t *testing.T) {
 	for _, v := range []struct {
 		op string
 		lf func(p, q bool) bool
-		bf func(s0, s1 *Bitset)
+		bf func(s0, s1 *Set)
 	}{
 		{
-			"and",
+			"intersect",
 			func(p, q bool) bool {
 				return p && q
 			},
-			func(s0, s1 *Bitset) {
-				s0.And(s1)
+			func(s0, s1 *Set) {
+				s0.Intersect(s1)
 			},
 		},
 		{
-			"and not",
+			"subtract",
 			func(p, q bool) bool {
 				return p && !q
 			},
-			func(s0, s1 *Bitset) {
-				s0.AndNot(s1)
+			func(s0, s1 *Set) {
+				s0.Subtract(s1)
 			},
 		},
 		{
-			"or",
+			"union",
 			func(p, q bool) bool {
 				return p || q
 			},
-			func(s0, s1 *Bitset) {
-				s0.Or(s1)
+			func(s0, s1 *Set) {
+				s0.Union(s1)
 			},
 		},
 		{
-			"xor",
+			"symmetric difference",
 			func(p, q bool) bool {
 				return p != q
 			},
-			func(s0, s1 *Bitset) {
-				s0.XOr(s1)
+			func(s0, s1 *Set) {
+				s0.SymmetricDifference(s1)
 			},
 		},
 	} {
 		f0 := func(l0, l1 ascendingInts) string {
-			b0 := new(Bitset)
+			b0 := new(Set)
 			for _, i := range l0 {
 				b0.Add(i)
 			}
-			b1 := new(Bitset)
+			b1 := new(Set)
 			for _, i := range l1 {
 				b1.Add(i)
 			}
@@ -372,7 +372,7 @@ func TestBitwise(t *testing.T) {
 func BenchmarkNextAfter(b *testing.B) {
 	buf := make([]byte, 10000)
 	rand.Read(buf)
-	s := new(Bitset)
+	s := new(Set)
 	s.FromBytes(buf)
 	var x int
 	b.ResetTimer()

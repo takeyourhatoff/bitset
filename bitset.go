@@ -1,4 +1,4 @@
-// Package bitset provides Bitset, a compact and fast representation for a dense set of positive integer values.
+// Package bitset provides Set, a compact and fast representation for a dense set of positive integer values.
 package bitset
 
 import (
@@ -10,13 +10,13 @@ import (
 
 const maxUint = 1<<bits.UintSize - 1
 
-// Bitset represents a set of positive integers. Memory usage is proportional to the largest integer in the Bitset.
-type Bitset struct {
+// Set represents a set of positive integers. Memory usage is proportional to the largest integer in the Set.
+type Set struct {
 	s []uint
 }
 
 // Add adds the integer i to s. Add panics if i is less than zero.
-func (s *Bitset) Add(i int) {
+func (s *Set) Add(i int) {
 	if i < 0 {
 		panic("bitset: cannot add non-negative integer to set")
 	}
@@ -28,7 +28,7 @@ func (s *Bitset) Add(i int) {
 }
 
 // AddRange adds integers in the interval [low, hi) to the set. AddRange panics if low is less than zero.
-func (s *Bitset) AddRange(low, hi int) {
+func (s *Set) AddRange(low, hi int) {
 	if low < 0 {
 		panic("bitset: cannot add non-negative integer to set")
 	}
@@ -54,7 +54,7 @@ func (s *Bitset) AddRange(low, hi int) {
 }
 
 // Remove removes the integer i from s, or does nothing if i is not already in s.
-func (s *Bitset) Remove(i int) {
+func (s *Set) Remove(i int) {
 	if i < 0 {
 		// i < 0 cannot bit in set by definition.
 		return
@@ -66,7 +66,7 @@ func (s *Bitset) Remove(i int) {
 }
 
 // RemoveRange removes integers in the interval [low, hi) from the set.
-func (s *Bitset) RemoveRange(low, hi int) {
+func (s *Set) RemoveRange(low, hi int) {
 	if low < 0 {
 		low = 0
 	}
@@ -96,7 +96,7 @@ func (s *Bitset) RemoveRange(low, hi int) {
 }
 
 // Test returns true if i is in s, false otherwise.
-func (s *Bitset) Test(i int) bool {
+func (s *Set) Test(i int) bool {
 	w, mask := idx(i)
 	if i < 0 || w >= len(s.s) {
 		return false
@@ -105,7 +105,7 @@ func (s *Bitset) Test(i int) bool {
 }
 
 // Max returns the value of the maximum integer in s, or -1 if s is empty.
-func (s *Bitset) Max() int {
+func (s *Set) Max() int {
 	for n := len(s.s) - 1; n >= 0; n-- {
 		if s.s[n] == 0 {
 			continue
@@ -115,8 +115,8 @@ func (s *Bitset) Max() int {
 	return -1
 }
 
-// And removes integers in s which are not also in ss.
-func (s *Bitset) And(ss *Bitset) {
+// Intersect removes integers in s which are not also in ss.
+func (s *Set) Intersect(ss *Set) {
 	n := min(len(s.s), len(ss.s))
 	for i := 0; i < n; i++ {
 		s.s[i] &= ss.s[i]
@@ -124,16 +124,16 @@ func (s *Bitset) And(ss *Bitset) {
 	s.s = s.s[:n]
 }
 
-// AndNot removes integers from s which are also in ss.
-func (s *Bitset) AndNot(ss *Bitset) {
+// Subtract removes integers from s which are also in ss.
+func (s *Set) Subtract(ss *Set) {
 	n := min(len(s.s), len(ss.s))
 	for i := 0; i < n; i++ {
 		s.s[i] &^= ss.s[i]
 	}
 }
 
-// Or adds integers to s which are in ss.
-func (s *Bitset) Or(ss *Bitset) {
+// Union adds integers to s which are in ss.
+func (s *Set) Union(ss *Set) {
 	n := min(len(s.s), len(ss.s))
 	for i := 0; i < n; i++ {
 		s.s[i] |= ss.s[i]
@@ -143,8 +143,8 @@ func (s *Bitset) Or(ss *Bitset) {
 	}
 }
 
-// XOr adds integers to s which are in ss but not in s, and removes integers in s that are also in ss.
-func (s *Bitset) XOr(ss *Bitset) {
+// SymmetricDifference adds integers to s which are in ss but not in s, and removes integers in s that are also in ss.
+func (s *Set) SymmetricDifference(ss *Set) {
 	n := min(len(s.s), len(ss.s))
 	for i := 0; i < n; i++ {
 		s.s[i] ^= ss.s[i]
@@ -154,8 +154,8 @@ func (s *Bitset) XOr(ss *Bitset) {
 	}
 }
 
-// Count returns the number of integers in s.
-func (s *Bitset) Count() int {
+// Cardinality returns the number of integers in s.
+func (s *Set) Cardinality() int {
 	var n int
 	for i := range s.s {
 		n += bits.OnesCount(s.s[i])
@@ -164,7 +164,7 @@ func (s *Bitset) Count() int {
 }
 
 // NextAfter returns the smallest integer in s greater than or equal to i or -1 if no such integer exists.
-func (s *Bitset) NextAfter(i int) int {
+func (s *Set) NextAfter(i int) int {
 	if i < 0 {
 		// There can be no integers in s less than 0 by definition
 		i = 0
@@ -181,19 +181,19 @@ func (s *Bitset) NextAfter(i int) int {
 }
 
 // Copy returns a copy of s.
-func (s *Bitset) Copy() *Bitset {
+func (s *Set) Copy() *Set {
 	n := len(s.s)
 	for n > 0 && s.s[n-1] == 0 {
 		n--
 	}
-	ss := new(Bitset)
+	ss := new(Set)
 	ss.s = make([]uint, n)
 	copy(ss.s, s.s)
 	return ss
 }
 
 // String returns a string representation of s.
-func (s *Bitset) String() string {
+func (s *Set) String() string {
 	var buf bytes.Buffer
 	buf.WriteRune('[')
 	first := true
@@ -210,7 +210,7 @@ func (s *Bitset) String() string {
 
 // Bytes returns the set as a bitarray.
 // The most significant bit in each byte represents the smallest-index number.
-func (s *Bitset) Bytes() []byte {
+func (s *Set) Bytes() []byte {
 	const r = bits.UintSize / 8
 	b := make([]byte, len(s.s)*r)
 	b0 := b
@@ -233,7 +233,7 @@ func (s *Bitset) Bytes() []byte {
 }
 
 // FromBytes sets s to the value of data interpreted as a bitarray in the same format as produced by Bytes..
-func (s *Bitset) FromBytes(data []byte) {
+func (s *Set) FromBytes(data []byte) {
 	const r = bits.UintSize / 8
 	if len(data) == 0 {
 		s.s = nil
