@@ -283,6 +283,23 @@ func TestAddRange(t *testing.T) {
 	}
 }
 
+func TestAddRange00(t *testing.T) {
+	b := new(Set)
+	b.AddRange(0, 0)
+	if b.Cardinality() != 0 {
+		t.Errorf("b.String() = %v, expected []", b)
+	}
+}
+
+func TestRemoveRange00(t *testing.T) {
+	b := new(Set)
+	b.Add(0)
+	b.RemoveRange(0, 0)
+	if b.Cardinality() != 1 {
+		t.Errorf("b.String() = %v, expected [0]", b)
+	}
+}
+
 func TestRemoveRange(t *testing.T) {
 	f0 := func(buf []byte, low, len uint8) string {
 		var s Set

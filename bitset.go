@@ -32,6 +32,9 @@ func (s *Set) AddRange(low, hi int) {
 	if low < 0 {
 		panic("bitset: cannot add non-negative integer to set")
 	}
+	if low == hi {
+		return
+	}
 	w0, _ := idx(low)
 	w1, _ := idx(hi - 1)
 	for j := len(s.s); j <= w1; j++ {
@@ -69,6 +72,9 @@ func (s *Set) Remove(i int) {
 func (s *Set) RemoveRange(low, hi int) {
 	if low < 0 {
 		low = 0
+	}
+	if low == hi {
+		return
 	}
 	w0, _ := idx(low)
 	if w0 >= len(s.s) {
