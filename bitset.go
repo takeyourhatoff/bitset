@@ -163,6 +163,7 @@ func (s *Set) Cardinality() int {
 	return n
 }
 
+// Equal returns true if s and ss contain the same integers
 func (s *Set) Equal(ss *Set) bool {
 	s0, s1 := s.s, ss.s
 	for len(s0) > 0 && s0[len(s0)-1] == 0 {
