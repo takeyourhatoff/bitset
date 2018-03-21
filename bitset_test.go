@@ -390,25 +390,27 @@ func TestBitwise(t *testing.T) {
 			},
 		},
 	} {
-		f0 := func(l0, l1 ascendingInts) string {
-			b0 := new(Set)
-			for _, i := range l0 {
-				b0.Add(i)
+		t.Run(v.op, func(t *testing.T) {
+			f0 := func(l0, l1 ascendingInts) string {
+				b0 := new(Set)
+				for _, i := range l0 {
+					b0.Add(i)
+				}
+				b1 := new(Set)
+				for _, i := range l1 {
+					b1.Add(i)
+				}
+				v.bf(b0, b1)
+				return b0.String()
 			}
-			b1 := new(Set)
-			for _, i := range l1 {
-				b1.Add(i)
+			f1 := func(l0, l1 ascendingInts) string {
+				lx := bitwiseF(v.lf, l0, l1)
+				return fmt.Sprint(lx)
 			}
-			v.bf(b0, b1)
-			return b0.String()
-		}
-		f1 := func(l0, l1 ascendingInts) string {
-			lx := bitwiseF(v.lf, l0, l1)
-			return fmt.Sprint(lx)
-		}
-		if err := quick.CheckEqual(f0, f1, nil); err != nil {
-			t.Errorf("Op: %s\n%v", v.op, err)
-		}
+			if err := quick.CheckEqual(f0, f1, nil); err != nil {
+				t.Error(err)
+			}
+		})
 	}
 }
 
