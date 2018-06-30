@@ -2,10 +2,10 @@
 package bitset
 
 import (
-	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math/bits"
+	"strconv"
+	"strings"
 )
 
 const maxUint = 1<<bits.UintSize - 1
@@ -15,15 +15,21 @@ type Set struct {
 	s []uint
 }
 
+func (s *Set) grow(n int) {
+	n, _ = idx(n)
+	if n < len(s.s) {
+		return
+	}
+	s.s = append(s.s, make([]uint, n-len(s.s)+1)...)
+}
+
 // Add adds the integer i to s. Add panics if i is less than zero.
 func (s *Set) Add(i int) {
 	if i < 0 {
 		panic("bitset: cannot add non-negative integer to set")
 	}
+	s.grow(i)
 	w, mask := idx(i)
-	for j := len(s.s); j <= w; j++ {
-		s.s = append(s.s, 0)
-	}
 	s.s[w] |= mask
 }
 
@@ -35,11 +41,9 @@ func (s *Set) AddRange(low, hi int) {
 	if hi-low <= 0 {
 		return
 	}
+	s.grow(hi)
 	w0, _ := idx(low)
 	w1, _ := idx(hi - 1)
-	for j := len(s.s); j <= w1; j++ {
-		s.s = append(s.s, 0)
-	}
 	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
 	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
 	if w1 == w0 {
@@ -214,17 +218,17 @@ func (s *Set) Copy() *Set {
 
 // String returns a string representation of s.
 func (s *Set) String() string {
-	var buf bytes.Buffer
-	buf.WriteRune('[')
+	var buf strings.Builder
+	buf.WriteByte('[')
 	first := true
 	for i := s.NextAfter(0); i >= 0; i = s.NextAfter(i + 1) {
 		if !first {
-			buf.WriteRune(' ')
+			buf.WriteByte(' ')
 		}
-		fmt.Fprintf(&buf, "%d", i)
+		buf.WriteString(strconv.Itoa(i))
 		first = false
 	}
-	buf.WriteRune(']')
+	buf.WriteByte(']')
 	return buf.String()
 }
 
