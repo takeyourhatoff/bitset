@@ -3,22 +3,24 @@ package bitset
 import (
 	"bytes"
 	"fmt"
+	"iter"
 	"math/bits"
 	"math/rand"
 	"reflect"
 	"runtime"
+	"slices"
 	"sort"
 	"testing"
 	"testing/quick"
 )
 
-// NextAfter can be used to iterate over the elements of the set.
-func ExampleSet_NextAfter() {
+// From can be used to iterate over the elements of the set.
+func ExampleSet_From() {
 	s := new(Set)
 	s.Add(2)
 	s.Add(42)
 	s.Add(13)
-	for i := s.NextAfter(0); i >= 0; i = s.NextAfter(i + 1) {
+	for i := range s.From(0) {
 		fmt.Println(i)
 	}
 	// Output:
@@ -211,13 +213,38 @@ func TestNextAfter(t *testing.T) {
 		}
 		var n int
 		var oldi int
-		for i := b.NextAfter(0); i >= 0; i = b.NextAfter(i + 1) {
+		for i := b.NextAfter(-1); i >= 0; i = b.NextAfter(i + 1) {
 			if l[n] != i {
 				t.Logf("b.NextAfter(%d) = %d, expected %d", oldi, i, l[n])
 				return false
 			}
 			oldi = i
 			n++
+		}
+		return true
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestFrom(t *testing.T) {
+	f := func(l ascendingInts, fstart float64) bool {
+		b := new(Set)
+		for _, i := range l {
+			b.Add(i)
+		}
+		start := int(fstart*float64(len(l))) - 1
+		got := slices.Collect(b.From(start))
+		var want ascendingInts
+		for _, num := range l {
+			if num >= start {
+				want = append(want, num)
+			}
+		}
+		if !slices.Equal(got, want) {
+			t.Logf("b.From(%d) = %v, expected %v", start, got, want)
+			return false
 		}
 		return true
 	}
@@ -427,6 +454,25 @@ func BenchmarkNextAfter(b *testing.B) {
 			x = 0
 		}
 	}
+}
+
+func BenchmarkFrom(b *testing.B) {
+	buf := make([]byte, 10000)
+	rand.Read(buf)
+	s := new(Set)
+	s.FromBytes(buf)
+	next, stop := iter.Pull(s.From(0))
+	defer stop()
+	var x int
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var ok bool
+		x, ok = next()
+		if !ok {
+			x = 0
+		}
+	}
+	_ = x
 }
 
 func bitwiseF(f func(p, q bool) bool, l0, l1 []int) []int {

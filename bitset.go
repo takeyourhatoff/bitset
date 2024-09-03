@@ -3,12 +3,13 @@ package bitset
 
 import (
 	"encoding/binary"
+	"iter"
 	"math/bits"
 	"strconv"
 	"strings"
 )
 
-const maxUint = 1<<bits.UintSize - 1
+const maxUint = ^uint(0)
 
 // Set represents a set of positive integers. Memory usage is proportional to the largest integer in the Set.
 type Set struct {
@@ -44,8 +45,8 @@ func (s *Set) AddRange(low, hi int) {
 	s.grow(hi)
 	w0, _ := idx(low)
 	w1, _ := idx(hi - 1)
-	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
-	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
+	leftMask := maxUint << (uint(low) % bits.UintSize)
+	rightMask := maxUint >> (uint(bits.UintSize-hi) % bits.UintSize)
 	if w1 == w0 {
 		s.s[w0] |= leftMask & rightMask
 		return
@@ -86,8 +87,8 @@ func (s *Set) RemoveRange(low, hi int) {
 		hi = len(s.s) * bits.UintSize
 		w1 = len(s.s) - 1
 	}
-	leftMask := uint(maxUint) << (uint(low) % bits.UintSize)
-	rightMask := uint(maxUint) >> (uint(bits.UintSize-hi) % bits.UintSize)
+	leftMask := maxUint << (uint(low) % bits.UintSize)
+	rightMask := maxUint >> (uint(bits.UintSize-hi) % bits.UintSize)
 	if w1 == w0 {
 		s.s[w0] &^= leftMask & rightMask
 		return
@@ -187,19 +188,43 @@ func (s *Set) Equal(ss *Set) bool {
 	return true
 }
 
+// From returns a sequence of integers in s starting at i.
+func (s *Set) From(i int) iter.Seq[int] {
+	return func(yield func(int) bool) {
+		if i < 0 {
+			i = 0
+		}
+		si := i / bits.UintSize
+		for idx := si; idx < len(s.s); idx++ {
+			word := s.s[idx]
+			if idx == si {
+				word &= maxUint << (i % bits.UintSize)
+			}
+			for word != 0 {
+				j := bits.TrailingZeros(word)
+				if !yield(idx*bits.UintSize + j) {
+					return
+				}
+				word &^= 1 << j
+			}
+		}
+	}
+}
+
 // NextAfter returns the smallest integer in s greater than or equal to i or -1 if no such integer exists.
 func (s *Set) NextAfter(i int) int {
 	if i < 0 {
 		// There can be no integers in s less than 0 by definition
 		i = 0
 	}
-	mask := uint(maxUint) << (uint(i) % bits.UintSize)
+	mask := maxUint << (uint(i) % bits.UintSize)
 	for j := i / bits.UintSize; j < len(s.s); j++ {
 		word := s.s[j] & mask
 		mask = maxUint
 		if word != 0 {
 			return j*bits.UintSize + bits.TrailingZeros(word)
 		}
+		word &^= 1 << j
 	}
 	return -1
 }
@@ -221,7 +246,7 @@ func (s *Set) String() string {
 	var buf strings.Builder
 	buf.WriteByte('[')
 	first := true
-	for i := s.NextAfter(0); i >= 0; i = s.NextAfter(i + 1) {
+	for i := range s.From(0) {
 		if !first {
 			buf.WriteByte(' ')
 		}
@@ -284,11 +309,4 @@ func idx(i int) (w int, mask uint) {
 	w = i / bits.UintSize
 	mask = 1 << (uint(i) % bits.UintSize)
 	return
-}
-
-func min(i, j int) int {
-	if i < j {
-		return i
-	}
-	return j
 }
